@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   audit-protocol:
-    image: ghcr.io/powerloom/audit-protocol:latest
+    image: ghcr.io/powerloom/audit-protocol:testnet_pretask
     expose:
       - 9000
       - 9002
@@ -18,6 +18,7 @@ services:
          condition: service_healthy
     volumes:
       - local_cache:/home/ubuntu/local_cache/
+      - ./logs/audit-protocol:/root/.pm2/logs
     links:
       - "ipfs"
       - "redis"
@@ -44,7 +45,7 @@ services:
       bash -c "sh snapshotter_autofill.sh && sh init_processes.sh"
 
   pooler:
-    image: ghcr.io/powerloom/pooler:latest
+    image: ghcr.io/powerloom/pooler:testnet_pretask
     depends_on:
       audit-protocol:
         condition: service_healthy
@@ -60,6 +61,7 @@ services:
       - 8555:8555
     volumes:
       - local_cache:/home/ubuntu/local_cache/
+      - ./logs/pooler:/logs
     environment:
       - SIGNER_ACCOUNT_ADDRESS=$SIGNER_ACCOUNT_ADDRESS
       - SOURCE_RPC_URL=$SOURCE_RPC_URL
@@ -80,7 +82,7 @@ services:
       bash -c "sh snapshotter_autofill.sh && sh init_processes.sh"
 
   pooler-frontend:
-    image: ghcr.io/powerloom/pooler-frontend:latest
+    image: ghcr.io/powerloom/pooler-frontend:testnet_pretask
     depends_on:
       pooler:
         condition: service_healthy
@@ -128,6 +130,8 @@ services:
   ipfs:
     image: ipfs/kubo:release
     profiles: ["ipfs"]
+    environment:
+      - IPFS_PROFILE=server
     entrypoint: >
       /bin/sh -c "
       echo 'adding cronjob';
